@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ulangan Harian HTML</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #eef2f5; margin: 0; padding: 15px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 600px; margin: auto; }
+        .btn { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .btn:active { background: #0056b3; }
+        .badge-warning { color: #dc3545; font-weight: bold; font-size: 14px; background: #ffe6e6; padding: 4px 8px; border-radius: 4px; }
+        #quizBox { display: none; }
+        .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .question-title { font-weight: 600; margin-bottom: 10px; color: #333; line-height: 1.4; }
+        .option { margin: 8px 0; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; display: flex; align-items: center; cursor: pointer; }
+        .option input { margin-right: 10px; transform: scale(1.2); }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- LAYAR AWAL -->
+    <div id="startBox">
+        <h2 style="margin-top:0; color:#007bff;">Ulangan Harian: Dasar HTML</h2>
+        <p style="color:#666; font-size:14px;">Aturan Ujian di HP:</p>
+        <ul style="color:#555; font-size:14px; padding-left:20px; line-height:1.6;">
+            <li>Layar akan masuk ke mode <b>Fullscreen</b>.</li>
+            <li>Dilarang usap keluar, pindah aplikasi (WA, Google, dll), atau minimalkan browser.</li>
+            <li>Jatah melanggar: <b>Maksimal 2 kali</b> sebelum jawaban terkirim otomatis!</li>
+        </ul>
+        
+        <label style="font-weight:bold; font-size:14px;">Nama Lengkap Siswa:</label>
+        <input type="text" id="namaSiswa" placeholder="Masukkan Nama Lengkap" autocomplete="off">
+        
+        <button class="btn" onclick="mulaiUjianHP()">Mulai Ujian Fullscreen</button>
+    </div>
+
+    <!-- TAMPILAN SOAL -->
+    <div id="quizBox">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+            <span style="font-size:14px;">Siswa: <b id="displayName"></b></span>
+            <span class="badge-warning">Melanggar: <span id="warnCount">0</span>/2</span>
+        </div>
+        <hr style="border:0; border-top:1px solid #eee; margin-bottom: 20px;">
+
+        <form id="formSoal">
+            <!-- SOAL GENERATED VIA JS -->
+            <div id="soalContainer"></div>
+            <button type="button" class="btn" style="background:#28a745;" onclick="kirimJawaban()">Kirim Jawaban</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // DATA 10 SOAL HTML
+    const bankSoal = [
+        { id: "q1", q: "1. Apa kepanjangan dari HTML?", options: ["Hyper Text Markup Language", "High Tech Multi Language", "Hyper Transfer Mode Logic", "Home Tool Markup Language"], key: 0 },
+        { id: "q2", q: "2. Tag HTML yang digunakan untuk membuat judul terbesar adalah...", options: ["<head>", "<h6>", "<h1>", "<heading>"], key: 2 },
+        { id: "q3", q: "3. Tag yang digunakan untuk membuat paragraf adalah...", options: ["<p>", "<paragraph>", "<pg>", "<text>"], key: 0 },
+        { id: "q4", q: "4. Karakter apa yang menandakan tag penutup dalam HTML?", options: ["*", "/", "<", "^"], key: 1 },
+        { id: "q5", q: "5. Tag yang benar untuk membuat link / hyperlink adalah...", options: ["<a url='...'>", "<link href='...'>", "<a href='...'>", "<navigate='...'>"], key: 2 },
+        { id: "q6", q: "6. Tag yang digunakan untuk menyisipkan gambar ke dalam web adalah...", options: ["<image>", "<img>", "<picture>", "<src>"], key: 1 },
+        { id: "q7", q: "7. Tag <br> digunakan untuk...", options: ["Membuat teks cetak tebal", "Membuat garis bawah", "Ganti baris / ganti baris baru", "Membuat teks miring"], key: 2 },
+        { id: "q8", q: "8. Atribut yang digunakan untuk memberikan alamat gambar pada tag <img> adalah...", options: ["link", "href", "src", "alt"], key: 2 },
+        { id: "q9", q: "9. Tag yang digunakan untuk membuat daftar berurutan (numbered list) adalah...", options: ["<ul>", "<ol>", "<li>", "<dl>"], key: 1 },
+        { id: "q10", q: "10. Di dalam tag manakah informasi meta dan judul dokumen (title) diletakkan?", options: ["<body>", "<head>", "<footer>", "<html>"], key: 1 }
+    ];
+
+    let pelanggaran = 0;
+    const maxPelanggaran = 2;
+    // PASTE URL APPS SCRIPT SPREADSHEET KAMU DI SINI
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+
+    // GENERATE TAMPILAN SOAL
+    function renderSoal() {
+        const container = document.getElementById('soalContainer');
+        container.innerHTML = bankSoal.map((s, idx) => `
+            <div class="question-item">
+                <div class="question-title">${s.q}</div>
+                ${s.options.map((opt, i) => `
+                    <label class="option">
+                        <input type="radio" name="${s.id}" value="${i}">
+                        <span>${opt}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `).join('');
+    }
+
+    function mulaiUjianHP() {
+        const nama = document.getElementById('namaSiswa').value.trim();
+        if (!nama) return alert("Isi nama kamu dulu!");
+
+        document.getElementById('displayName').innerText = nama;
+
+        // Trigger Fullscreen
+        let doc = document.documentElement;
+        if (doc.requestFullscreen) { doc.requestFullscreen(); }
+        else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen(); }
+
+        renderSoal();
+        document.getElementById('startBox').style.display = 'none';
+        document.getElementById('quizBox').style.display = 'block';
+
+        // Lock tombol Back di HP
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.pushState(null, null, location.href);
+            catatPelanggaran("Menekan tombol Back HP");
+        };
+    }
+
+    // DETEKSI PINDAH TAB / BUKA APLIKASI LAIN DI HP
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden && document.getElementById('quizBox').style.display === 'block') {
+            catatPelanggaran("Membuka aplikasi lain / pindah tab");
+        }
+    });
+
+    function catatPelanggaran(alasan) {
+        pelanggaran++;
+        document.getElementById('warnCount').innerText = pelanggaran;
+
+        if (pelanggaran >= maxPelanggaran) {
+            alert(`Kamu terdeteksi ${alasan} sebanyak ${pelanggaran}x! Ujian dihentikan & jawaban dikirim.`);
+            kirimJawaban();
+        } else {
+            alert(`PERINGATAN (${pelanggaran}/${maxPelanggaran}): Dilarang ${alasan}!`);
+        }
+    }
+
+    async function kirimJawaban() {
+        const nama = document.getElementById('namaSiswa').value.trim();
+        let benar = 0;
+        let detailJawaban = [];
+
+        // Kalkulasi Nilai
+        bankSoal.forEach(s => {
+            const selected = document.querySelector(`input[name="${s.id}"]:checked`);
+            const val = selected ? parseInt(selected.value) : -1;
+            
+            if (val === s.key) benar++;
+            detailJawaban.push(`${s.id}:${val === -1 ? 'Kosong' : val}`);
+        });
+
+        let nilaiAkhir = (benar / bankSoal.length) * 100;
+
+        const payload = {
+            nama: nama,
+            nilai: nilaiAkhir,
+            jawaban: `Benar:${benar}/${bankSoal.length} | Details:[${detailJawaban.join(',')}] | Pelanggaran:${pelanggaran}`
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            alert(`Ujian Selesai!\nNilai Kamu: ${nilaiAkhir}\nJawaban berhasil tersimpan.`);
+            location.reload();
+        } catch (e) {
+            alert(`Ujian Selesai!\nNilai Kamu: ${nilaiAkhir}\n(Gagal kirim ke database, pastikan URL Apps Script sudah diisi).`);
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
