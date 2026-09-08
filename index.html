@@ -5,31 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ulangan Harian HTML</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        /* MENCEGAH TEKS DIBLOK / DICOPIES */
+        * { 
+            box-sizing: border-box; 
+            -webkit-user-select: none; /* Safari / Chrome HP */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE/Edge */
+            user-select: none;         /* Standard */
+            -webkit-touch-callout: none; /* Mencegah popup menu 'Copy/Share' saat tahan lama di HP */
+        }
+
+        /* KHUSUS KOLOM INPUT NAMA BISA DIKETIK / DIBLOK */
+        input[type="text"] {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc; 
+            font-size: 15px; 
+            margin-top: 5px; 
+            margin-bottom: 10px;
+        }
+
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #eef2f5; margin: 0; padding: 15px; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 600px; margin: auto; }
-        .btn { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        
+        .btn { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer; transition: background 0.2s; }
         .btn:active { background: #0056b3; }
         .badge-warning { color: #dc3545; font-weight: bold; font-size: 14px; background: #ffe6e6; padding: 4px 8px; border-radius: 4px; }
+        
+        /* GAYA SOAL & KUIS */
         #quizBox { display: none; }
         .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
         .question-title { font-weight: 600; margin-bottom: 10px; color: #333; line-height: 1.4; }
-        .option { margin: 8px 0; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; display: flex; align-items: center; cursor: pointer; }
+        .option { margin: 8px 0; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; display: flex; align-items: center; cursor: pointer; transition: background 0.2s; }
         .option input { margin-right: 10px; transform: scale(1.2); }
-        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; margin-top: 5px; }
+        .option:active { background: #f0f0f0; }
+
+        /* GAYA HALAMAN AKHIR */
+        #finalPage { display: none; text-align: center; padding: 40px 20px; }
+        .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
+        .final-title { color: #333; margin-bottom: 10px; }
+        .final-message { color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <!-- LAYAR AWAL -->
+    
+    <!-- 1. LAYAR AWAL / START PAGE -->
     <div id="startBox">
         <h2 style="margin-top:0; color:#007bff;">Ulangan Harian: Dasar HTML</h2>
-        <p style="color:#666; font-size:14px;">Aturan Ujian di HP:</p>
+        <p style="color:#666; font-size:14px;"><b>Aturan Ujian di HP:</b></p>
         <ul style="color:#555; font-size:14px; padding-left:20px; line-height:1.6;">
-            <li>Layar akan masuk ke mode <b>Fullscreen</b>.</li>
+            <li>Layar akan otomatis masuk ke mode <b>Fullscreen</b>.</li>
             <li>Dilarang usap keluar, pindah aplikasi (WA, Google, dll), atau minimalkan browser.</li>
-            <li>Jatah melanggar: <b>Maksimal 2 kali</b> sebelum jawaban terkirim otomatis!</li>
+            <li>Melanggar 2x akan membuat jawaban <b>dikirim otomatis</b>!</li>
         </ul>
         
         <label style="font-weight:bold; font-size:14px;">Nama Lengkap Siswa:</label>
@@ -38,7 +72,7 @@
         <button class="btn" onclick="mulaiUjianHP()">Mulai Ujian Fullscreen</button>
     </div>
 
-    <!-- TAMPILAN SOAL -->
+    <!-- 2. TAMPILAN SOAL / QUIZ PAGE -->
     <div id="quizBox">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
             <span style="font-size:14px;">Siswa: <b id="displayName"></b></span>
@@ -47,14 +81,28 @@
         <hr style="border:0; border-top:1px solid #eee; margin-bottom: 20px;">
 
         <form id="formSoal">
-            <!-- SOAL GENERATED VIA JS -->
+            <!-- SOAL AKAN MUNCUL DI SINI DARI JAVASCRIPT -->
             <div id="soalContainer"></div>
-            <button type="button" class="btn" style="background:#28a745;" onclick="kirimJawaban()">Kirim Jawaban</button>
+            <button type="button" class="btn" id="btnSubmit" style="background:#28a745;" onclick="kirimJawaban()">Kirim Jawaban</button>
         </form>
     </div>
+
+    <!-- 3. HALAMAN AKHIR / FINAL PAGE -->
+    <div id="finalPage">
+        <div class="success-icon">✓</div>
+        <h2 class="final-title">Ulangan Selesai!</h2>
+        <p class="final-message">Terima kasih, <b><span id="finalSiswaName"></span></b>. Jawaban kamu telah berhasil tersimpan dalam sistem. Silakan laporkan ke guru atau tunggu instruksi selanjutnya.</p>
+    </div>
+
 </div>
 
 <script>
+    // ==========================================
+    // INTEGRASI GOOGLE SHEETS
+    // GANTI TEKS DI DALAM TANDA PETIK DENGAN URL APPS SCRIPT KAMU
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyz.../exec";
+
     // DATA 10 SOAL HTML
     const bankSoal = [
         { id: "q1", q: "1. Apa kepanjangan dari HTML?", options: ["Hyper Text Markup Language", "High Tech Multi Language", "Hyper Transfer Mode Logic", "Home Tool Markup Language"], key: 0 },
@@ -71,13 +119,35 @@
 
     let pelanggaran = 0;
     const maxPelanggaran = 2;
-    // PASTE URL APPS SCRIPT SPREADSHEET KAMU DI SINI
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+    let isTestRunning = false;
+
+    // ------------------------------------------
+    // SYSTEM PROTEKSI: ANTI COPY - PASTE - INSPECT
+    // ------------------------------------------
+    document.addEventListener('contextmenu', e => e.preventDefault()); // Mati Klik Kanan
+    document.addEventListener('copy', e => { e.preventDefault(); alert("Dilarang menyalin teks!"); });
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('paste', e => {
+        if (e.target.id !== 'namaSiswa') {
+            e.preventDefault();
+            alert("Dilarang menempelkan teks!");
+        }
+    });
+    document.addEventListener('keydown', e => {
+        if (
+            (e.ctrlKey && ['c','C','u','U','s','S'].includes(e.key)) ||
+            (e.ctrlKey && e.shiftKey && ['i','I','j','J'].includes(e.key)) ||
+            e.key === 'F12'
+        ) {
+            e.preventDefault();
+            alert("Aksi ini dilarang selama ujian!");
+        }
+    });
 
     // GENERATE TAMPILAN SOAL
     function renderSoal() {
         const container = document.getElementById('soalContainer');
-        container.innerHTML = bankSoal.map((s, idx) => `
+        container.innerHTML = bankSoal.map(s => `
             <div class="question-item">
                 <div class="question-title">${s.q}</div>
                 ${s.options.map((opt, i) => `
@@ -90,11 +160,13 @@
         `).join('');
     }
 
+    // MULAI UJIAN & FULLSCREEN
     function mulaiUjianHP() {
         const nama = document.getElementById('namaSiswa').value.trim();
         if (!nama) return alert("Isi nama kamu dulu!");
 
         document.getElementById('displayName').innerText = nama;
+        document.getElementById('finalSiswaName').innerText = nama;
 
         // Trigger Fullscreen
         let doc = document.documentElement;
@@ -104,6 +176,7 @@
         renderSoal();
         document.getElementById('startBox').style.display = 'none';
         document.getElementById('quizBox').style.display = 'block';
+        isTestRunning = true;
 
         // Lock tombol Back di HP
         history.pushState(null, null, location.href);
@@ -113,9 +186,9 @@
         };
     }
 
-    // DETEKSI PINDAH TAB / BUKA APLIKASI LAIN DI HP
+    // DETEKSI PINDAH TAB / BUKA APLIKASI LAIN
     document.addEventListener("visibilitychange", function() {
-        if (document.hidden && document.getElementById('quizBox').style.display === 'block') {
+        if (document.hidden && isTestRunning) {
             catatPelanggaran("Membuka aplikasi lain / pindah tab");
         }
     });
@@ -125,15 +198,24 @@
         document.getElementById('warnCount').innerText = pelanggaran;
 
         if (pelanggaran >= maxPelanggaran) {
-            alert(`Kamu terdeteksi ${alasan} sebanyak ${pelanggaran}x! Ujian dihentikan & jawaban dikirim.`);
-            kirimJawaban();
+            alert(`Kamu terdeteksi ${alasan} sebanyak ${pelanggaran}x! Ujian dihentikan & jawaban dikirim otomatis.`);
+            kirimJawaban(true);
         } else {
-            alert(`PERINGATAN (${pelanggaran}/${maxPelanggaran}): Dilarang ${alasan}!`);
+            alert(`PERINGATAN (${pelanggaran}/${maxPelanggaran}): Dilarang ${alasan}! Ujian akan terhenti jika melanggar lagi.`);
         }
     }
 
-    async function kirimJawaban() {
+    // KIRIM JAWABAN KE GOOGLE SHEETS
+    async function kirimJawaban(autoSubmit = false) {
         const nama = document.getElementById('namaSiswa').value.trim();
+        
+        const btnSubmit = document.getElementById('btnSubmit');
+        if(!autoSubmit) {
+            btnSubmit.innerText = "Mengirim...";
+            btnSubmit.disabled = true;
+            btnSubmit.style.background = "#6c757d";
+        }
+        
         let benar = 0;
         let detailJawaban = [];
 
@@ -154,13 +236,26 @@
             jawaban: `Benar:${benar}/${bankSoal.length} | Details:[${detailJawaban.join(',')}] | Pelanggaran:${pelanggaran}`
         };
 
+        isTestRunning = false; 
+        window.onpopstate = null; // Lepas kuncian tombol back
+
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            alert(`Ujian Selesai!\nNilai Kamu: ${nilaiAkhir}\nJawaban berhasil tersimpan.`);
-            location.reload();
+            tampilkanHalamanAkhir();
         } catch (e) {
-            alert(`Ujian Selesai!\nNilai Kamu: ${nilaiAkhir}\n(Gagal kirim ke database, pastikan URL Apps Script sudah diisi).`);
-            location.reload();
+            console.error("Gagal kirim ke Google Sheets", payload);
+            alert(`Ujian Selesai!\nSistem gagal otomatis mengirim ke sheet.\n\nTunjukkan layar ini ke guru:\nNama: ${nama}\nNilai: ${nilaiAkhir}\nPelanggaran: ${pelanggaran}`);
+            tampilkanHalamanAkhir();
+        }
+    }
+
+    function tampilkanHalamanAkhir() {
+        document.getElementById('quizBox').style.display = 'none';
+        document.getElementById('finalPage').style.display = 'block';
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
         }
     }
 </script>
